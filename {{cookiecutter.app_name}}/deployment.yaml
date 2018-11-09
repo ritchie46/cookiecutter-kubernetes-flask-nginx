@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{cookiecutter.app_name}}-deployment
+  labels:
+    app: {{cookiecutter.app_name}}
+
+spec:
+  replicas: {{cookiecutter.pod_replicas}}
+  selector:
+    matchLabels:
+      app: {{cookiecutter.app_name}}
+
+  template:
+    metadata:
+      name: {{cookiecutter.app_name}}-pod-template
+      labels:
+        app: {{cookiecutter.app_name}}
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-proxy-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: static-volume
+              mountPath: /static
+
+        - name: app
+          image: {{cookiecutter.container_tag}}
+      # this container runs before the pod is deployed and moves
+      # the static file to the static volume.
+      initContainers:
+        - name: populate-volume
+          image: {{cookiecutter.container_tag}}
+          command: ["/bin/sh"]
+          args: ["-c", "cp -r /app/web/static/* /static/"]
+          volumeMounts:
+            - name: static-volume
+              mountPath: /static
+
+
+      volumes:
+      - name: nginx-proxy-config-volume
+        configMap:
+          name: {{cookiecutter.app_name}}-nginx-conf
+      - name: static-volume
+        emptyDir: {}

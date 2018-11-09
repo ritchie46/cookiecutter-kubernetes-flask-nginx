@@ -1,0 +1,7 @@
+{
+  "app_name": "flask-app",
+  "container_tag": "ritchie46/temp",
+  "gunicorn_port": 8000,
+  "pod_replicas": 1
+
+}

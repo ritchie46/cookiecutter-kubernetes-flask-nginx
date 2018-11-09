@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{cookiecutter.app_name}}-nginx-conf
+
+# Note: The pipe character allows multiple lines and tabs in the values.
+data:
+  nginx.conf: |-
+    user nginx;
+    worker_processes 1;
+
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+          worker_connections  1024;
+      }
+
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        sendfile        on;
+        keepalive_timeout  65;
+
+        upstream app {
+            server 127.0.0.1:{{cookiecutter.gunicorn_port}};
+        }
+
+
+        server {
+            listen 80;
+
+            location /static {
+                root /;
+            }
+
+            location / {
+                proxy_pass         http://app;
+                proxy_redirect     off;
+            }
+        }
+    }
